@@ -3,7 +3,6 @@
 #include <ctype.h>
 
 #include "my_string.h"
-#include "generic.h"
 
 struct my_string {
 	int size;
@@ -364,36 +363,100 @@ Status my_string_insertion(MY_STRING hMy_string, FILE* fp) {
 }
 
 void my_string_assignment(Item* pLeft, Item Right) {
-	if ((pLeft || pLeft == NULL) && Right) {
+	if ((*pLeft || *pLeft == NULL) && Right) {
+		if (*pLeft == NULL) {
+			My_string* pString = my_string_init_default();
+			My_string* copy = (My_string*)Right;
+			Status status;
 
-		printf("my_string_assignment()\n");
+			char* dataCopy = copy->data;
+			// printf("%s\n", dataCopy);
 
-		My_string* left_string = (My_string*)*pLeft;
+			for (int i = 0; i < copy->capacity; i++) {
+				status = my_string_push_back(pString, dataCopy[i]);
+				if (status == FAILURE) break;
+			}
 
-		printf("c str of pLeft: %s\n", my_string_c_str(left_string));
+			*pLeft = pString;
+		} else {
+			My_string* pString = (My_string*)*pLeft;
+			My_string* copy = (My_string*)Right;
+			Status status;
 
-		if (left_string) { // check if valid my_string object and if so, destroy it
-			my_string_destroy((Item*)&left_string);
-			printf("string destroyed\n");
+			char* dataCopy = copy->data;
+
+			for (int i = 0; i < copy->capacity; i++) {
+				status = my_string_push_back(pString, dataCopy[i]);
+				if (status == FAILURE) break;
+			}
+
+			*pLeft = pString;
 		}
-
-		left_string = my_string_init_default();
-
-		My_string* right_string = (My_string*)Right;
-		printf("c str of right: %s\n", my_string_c_str(right_string));
-		Status status;
-
-		for (int i = 0; i < right_string->capacity; i++) {
-			status = my_string_push_back(left_string, right_string->data[i]);
-			if (status == FAILURE) break;
-		}
-
-		printf("c str of left: %s\n", my_string_c_str(left_string));
-
-		Item* item_string = (Item*)left_string;
-
-		pLeft = item_string;
-
-		printf("c str of pLeft: %s\n", my_string_c_str(pLeft));
 	}
+}
+
+int order_str(MY_STRING hLeft_string, MY_STRING hRight_string) {
+    My_string* leftString = (My_string*)hLeft_string;
+    My_string* rightString = (My_string*)hRight_string;
+
+    if (leftString && rightString) {
+        char* leftChar = my_string_at(leftString, 0);
+        char* rightChar = my_string_at(rightString, 0);
+
+        int size1 = my_string_get_size(leftString);
+        int size2 = my_string_get_size(rightString);
+
+        int size;
+
+        if (size1 > size2) size = size2;
+        else size = size1;
+
+        for (int i = 0; i < size; i++) {
+            if (leftChar[i] != rightChar[i]) { // check if they are not the same
+                return (int)leftChar[i] - (int)rightChar[i];
+            }
+        }
+
+        // at this point, it's the same but a string could be longer
+        if (size1 > size2) return 1;
+        else if (size1 < size2)return -1;
+        else return 0;
+    }
+
+    return 0;
+}
+
+int order_str_ignore_case(MY_STRING hLeft_string, MY_STRING hRight_string) {
+    My_string* leftString = (My_string*)hLeft_string;
+    My_string* rightString = (My_string*)hRight_string;
+
+    if (leftString && rightString) {
+        char* leftChar = my_string_at(leftString, 0);
+        char* rightChar = my_string_at(rightString, 0);
+
+        int size1 = my_string_get_size(leftString);
+        int size2 = my_string_get_size(rightString);
+
+        int size;
+
+        if (size1 > size2) size = size2;
+        else size = size1;
+
+        for (int i = 0; i < size; i++) {
+            char left = leftChar[i];
+            char right = rightChar[i];
+            if (isupper(left) != 0) left = (char)((int)left + 32);
+            if (isupper(right) != 0) right = (char)((int)right + 32);
+            if (left != right) { // check if they are not the same
+                return (int)left - (int)right;
+            }
+        }
+
+        // at this point, it's the same but a string could be longer
+        if (size1 > size2) return 1;
+        else if (size1 < size2)return -1;
+        else return 0;
+    }
+
+    return 0;
 }

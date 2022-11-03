@@ -1,106 +1,107 @@
 #include <stdio.h>
 #include <stdlib.h>
+
+// #include "generic.h"
+#include "generic_vector.h"
 #include "my_string.h"
+#include "status.h"
 
-int main(int argc, char* argv[]) {
-	
-	MY_STRING hMy_string = NULL;
+// void (*fpAssignment)(ITEM* pLeft, ITEM right)
+void assignment(MY_STRING* pLeft, MY_STRING pRight);
 
-	/*
-	FILE* fp;
+// void (*fpDestroy)(ITEM* phItem)
+void destroy(MY_STRING* my_string);
 
-	hMy_string = my_string_init_default();
-	
-	fp = fopen("simple.txt", "r");
+// bool (*fpCriteria)(ITEM hItem)
+bool criteria(MY_STRING my_string);
 
-	while (my_string_extraction(hMy_string, fp)) {
-		
-		if (my_string_get_size(hMy_string) == 29) {
-			my_string_insertion(hMy_string, stdout);
-			printf("\n");
-		}
-		
-		my_string_insertion(hMy_string, stdout);
+int main(int argc, const char* argv[]) {
+
+    GENERIC_VECTOR dictionary[30] = { NULL };
+
+    // array of Vectors holds 30 vectors from word length 1 to 29
+    // so word length 1 starts at index 0
+    // and word length 29 starts at index 28
+    // nah or stick to length equals index 1
+    // for (int i = 0; i <= 28; i++) {
+    //     dictionary[i] = generic_vector_init_default(void (*assignment)(MY_STRING* hString, char* string),
+    //                                                 void (*destroy)(MY_STRING* hString));
+    // }
+
+    // void (*assignmentO)(MY_STRING*, MY_STRING) = &assignment;
+
+    for (int i = 0; i < 30; i++) {
+        dictionary[i] = generic_vector_init_default(&my_string_assignment,
+                                                    &destroy);
+    }
+
+    for (int i = 0; i < 30; i++) {
+        printf("size of [%d] array is: %d\n", i, generic_vector_get_size(dictionary[i]));
+    }
+
+    // check if my_string_assignment is operating
+
+    // MY_STRING my_string = my_string_init_default();
+
+    MY_STRING my_string = my_string_init_c_string("hello.");
+
+    MY_STRING my_string01 = my_string_init_c_string("hello there.");
+
+    printf("strings made.\n");
+
+    my_string_assignment((Item*)&my_string, (Item)my_string01);
+
+    printf("check: %s\n", my_string_c_str(my_string));
+
+    // check done
+
+    FILE* fp;
+    Status status;
+
+    fp = fopen("dictionary.txt", "r");
+
+    while (my_string_extraction(my_string, fp)) {
+        // printf("extraction.\n");
+        my_string_insertion(my_string, stdout);
 		printf("\n");
-		if(fgetc(fp) == ' ') {
-			printf("Found a space after the string\n");
-		}
+
+        int i = my_string_get_size(my_string);
+        status = generic_vector_push_back(dictionary[i], my_string);
+        if (status == FAILURE) {
+            printf("failure...\n");
+            return -1;
+        }
 	}
-	*/
 
-	hMy_string = my_string_init_c_string("this_is_string.");
+    my_string_destroy((Item*)&my_string);
+    printf("while loop : done...\n");
 
-	my_string_push_back(hMy_string, 't');
+    // check for a value
+    GENERIC_VECTOR vector_check = dictionary[8];
+    MY_STRING string_check = (MY_STRING)generic_vector_at(vector_check, 2000);
 
-	my_string_push_back(hMy_string, 'o');
+    printf("\ncheck--\n");
+    printf("%s\n", my_string_c_str(string_check));
+    printf("size: %d\n", my_string_get_size(string_check));
+    printf("\n");
 
-	my_string_push_back(hMy_string, '.');
+    for (int i = 0; i < 30; i++) {
+        int count = generic_vector_count(dictionary[i], &criteria);
+        printf("[%d] : %d\n", i, count);
+    }
 
-	char* str = my_string_c_str(hMy_string);
+    return 0;
+}
 
-	printf("my_string_c_str(): %s\n", str);
+void assignment(MY_STRING* pLeft, MY_STRING pRight) {
+    my_string_assignment((Item*)*pLeft, (Item)pRight);
+}
 
-	str = NULL;
+void destroy(MY_STRING* my_string) {
+    free(my_string);
+}
 
-	printf("length: %d\n", my_string_get_size(hMy_string));
-	my_string_pop_back(hMy_string);
-	printf("length: %d\n", my_string_get_size(hMy_string));
-	my_string_pop_back(hMy_string);
-	printf("length: %d\n", my_string_get_size(hMy_string));
-
-	my_string_push_back(hMy_string, 'i');
-	my_string_push_back(hMy_string, 'n');
-	my_string_push_back(hMy_string, '.');
-
-	char* new_string = my_string_c_str(hMy_string);
-
-	printf("my_string_c_str(): %s\n", new_string);
-
-	char* c = my_string_at(hMy_string, 2);
-
-	printf("my_string_at(): %c\n", c[0]);
-
-	MY_STRING hMy_string01 = my_string_init_c_string("hello");
-	MY_STRING hMy_string02 = my_string_init_c_string(", world!");
-
-	char* str01 = my_string_c_str(hMy_string01);
-	char* str02 = my_string_c_str(hMy_string02);
-
-	printf("string01 is \"%s\"\n", str01);
-	printf("string02 is \"%s\"\n", str02);
-
-	my_string_concat(hMy_string01, hMy_string02);
-
-	printf("concat called!\n");
-
-	char* str03 = my_string_c_str(hMy_string01);
-
-	printf("string01 is \"%s\"\n", str03);
-
-	printf("length of string01: %d\n", my_string_get_size(hMy_string01));
-
-	MY_STRING hMy_string03 = my_string_init_default();
-
-	printf("is string03 empty?\n");
-
-	if (my_string_empty(hMy_string03) == TRUE) printf("YES\n");
-	else printf("NO\n");
-
-	// free(str);
-
-	// free(new_string);
-
-	// free(c);
-
-	// free(str01);
-	// free(str02);
-	// free(str03);
-
-	my_string_destroy(&hMy_string);
-	my_string_destroy(&hMy_string01);
-	my_string_destroy(&hMy_string02);
-	my_string_destroy(&hMy_string03);
-	// fclose(fp);
-
-	return 0;
+bool criteria(MY_STRING my_string) {
+    if (my_string) return true;
+    else return false;
 }
